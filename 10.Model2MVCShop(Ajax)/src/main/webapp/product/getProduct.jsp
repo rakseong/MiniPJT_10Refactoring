@@ -9,6 +9,11 @@
 <link rel="stylesheet" href="/css/admin.css" type="text/css">
 <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
+	function fncGetList(currentPage){
+		$("#currentPage").val(currentPage);
+		document.detailForm.submit();
+	}
+
 	$(function(){
 		
 		$(".ct_btn01:contains('구매')").on('click',function(){
@@ -161,6 +166,56 @@
 		</td>
 	</tr>
 </table>
+
+<c:if test="${resultPage.totalCount != 0}">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top:10px;">
+	<tr>
+		<td colspan="11" >전체 ${resultPage.totalCount} 건수, 현재 ${resultPage.currentPage} 페이지</td>
+	</tr>
+	<tr>
+		<td class="ct_list_b" width="50">No</td>
+		<td class="ct_line02"></td>
+		<td class="ct_list_b" width="50">작성자</td>
+		<td class="ct_line02"></td>
+		<td class="ct_list_b" width="50">평점</td>
+		<td class="ct_line02"></td>
+		<td class="ct_list_b" width="50">리뷰등록일</td>
+		<td class="ct_line02"></td>
+		<td class="ct_list_b" width="100">내용</td>
+		<td class="ct_line02"></td>
+	</tr>
+	
+	<c:set var="i" value="0"/>
+	<c:forEach var="comment" items="${list}">
+		<c:set var="i" value="${ i+1 }" />
+		<tr class="ct_list_pop">
+		<td align="center">${i}</td>
+		<td></td>
+		<td align="left">${comment.userId}</td>
+		<td></td>
+		<td align="left">${comment.prodGrade} / 5</td>
+		<td></td>
+		<td align="left">${comment.commentRegDate}</td>
+		<td></td>
+		<td align="left">${comment.commentDetail}
+		</td>	
+		</tr>
+		<tr>
+			<td colspan="11" bgcolor="D6D7D6" height="1"></td>
+		</tr>
+	</c:forEach>
+</table>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top:10px;">
+	<tr>
+		<td align="center">
+		<input type="hidden" id="currentPage" name="currentPage" value=""/>
+		<jsp:include page="../common/pageNavigator.jsp"/>
+    	</td>
+	</tr>
+</table>
+</c:if>
+
 </form>
 
 </body>

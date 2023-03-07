@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CommentMapper">
+ 	
+ 	
+	<resultMap id="commentSelectMap" type="comment">
+		<result property="commentId" 			column="COMMENT_ID" 			jdbcType="NUMERIC"/>
+		<result property="commentDetail"	column="COMMENT_DETAIL" 		jdbcType="VARCHAR" />
+		<result property="commentRegDate" 	column="COMMENT_REG_DATE" 		jdbcType="DATE" />
+		<result property="prodGrade" 				column="PROD_GRADE" 			jdbcType="NUMERIC" />
+		<result property="prodNo" 				column="PROD_NO" 					jdbcType="NUMERIC" />
+		<result property="userId" 			column="USER_ID" 		jdbcType="VARCHAR" />
+		<result property="purchase.tranNo" column="TRAN_NO" jdbcType="NUMERIC"/>
+	</resultMap>
+	
+	<!-- SQL : INSERT -->
+	<insert 	id="addComment"	parameterType="comment" >
+	 	INSERT INTO product
+		VALUES(seq_comment_comment_no.nextval,#{purchase.tranNo},#{commentDetail},
+		sysdate,#{prodGrade},#{prodNo},#{userId})
+	 </insert>
+	 
+	 <select 	id="getComment"	parameterType="Integer"	resultMap="commentSelectMap">
+		SELECT * FROM comments WHERE COMMENT_ID=#{value}
+	 </select>
+	 
+	 <select 	id="getCommentByTranNo"	parameterType="Integer"	resultMap="commentSelectMap">
+		SELECT * FROM comments WHERE TRAN_NO=#{value}
+	 </select>
+	 
+	 <update	id="updateComment"	parameterType="comment" >
+	   	UPDATE comments
+	   	<set>
+	   		COMMENT_DETAIL=#{commentDetail},
+	   		PROD_GRADE=#{prodGrade}
+	   	</set>
+	   	WHERE COMMENT_ID = #{commentId}
+	 </update>
+	 
+	 <select id="getCommentList" parameterType="java.util.Map" resultMap="commentSelectMap">
+	 	SELECT  *
+		FROM (	SELECT inner_table. * ,  ROWNUM AS row_seq
+				FROM ( 
+					SELECT *  FROM  comments WHERE PROD_NO=${prodNo} ORDER BY COMMENT_ID
+				) inner_table 
+				WHERE ROWNUM &lt;= #{search.endRowNum} )
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+	 </select>
+	 
+	 <select id="getTotalCount" parameterType="Integer" resultType="int">
+	 	SELECT COUNT(*) 
+		FROM ( 
+			SELECT *  FROM  comments WHERE PROD_NO=#{value} ORDER BY COMMENT_ID
+		) countTable
+	 </select>
+	 
+</mapper>

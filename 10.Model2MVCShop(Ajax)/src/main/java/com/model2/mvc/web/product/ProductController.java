@@ -20,6 +20,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.model2.mvc.common.Page;
 import com.model2.mvc.common.Search;
+import com.model2.mvc.service.comment.CommentService;
+import com.model2.mvc.service.comment.impl.CommentServiceImpl;
 import com.model2.mvc.service.domain.Product;
 import com.model2.mvc.service.product.ProductService;
 
@@ -30,6 +32,11 @@ public class ProductController {
 	@Autowired
 	@Qualifier("productServiceImpl")
 	private ProductService productService;
+	
+	@Autowired
+	@Qualifier("commentServiceImpl")
+	private CommentService commentService;
+	
 	
 	public ProductController() {
 		System.out.println(this.getClass());
@@ -102,11 +109,27 @@ public class ProductController {
 	}
 	
 	@RequestMapping("getProduct")
-	public String getProduct(@RequestParam("productNo") int prodNo,@RequestParam("menu") String menu, HttpServletRequest req) throws Exception{
+	public String getProduct(@ModelAttribute("search") Search search,@RequestParam("productNo") int prodNo
+			,@RequestParam(name="currentPage", required = false) Integer currentPage,@RequestParam("menu") String menu, HttpServletRequest req) throws Exception{
 		System.out.println("getProduct start...");
 		Product vo = productService.getProduct(prodNo);
-		
+		System.out.println(currentPage);
+		if(currentPage == null) {
+			currentPage = 1;
+		}
+		System.out.println(currentPage);
+		if(search == null) {
+			search = new Search();
+		}
+		search.setCurrentPage(currentPage.intValue());
+		search.setPageSize(pageSize);
+		Map<String, Object> map = commentService.getCommentList(search, prodNo);
+		Page resultPage = new Page(currentPage, ((Integer)map.get("totalCount")).intValue(),
+				pageUnit,pageSize);
+		System.out.println(resultPage);
 		String[] fileList = vo.getFileName().split("[,]");
+		req.setAttribute("resultPage", resultPage);
+		req.setAttribute("list", map.get("list"));
 		req.setAttribute("vo", vo);
 		req.setAttribute("fileList", fileList);
 		
