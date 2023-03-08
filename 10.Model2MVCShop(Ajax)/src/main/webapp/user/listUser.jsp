@@ -10,6 +10,12 @@
 	<meta charset="EUC-KR">
 	<title>회원 목록 조회</title>
 	
+	<style type="text/css">
+		.ct_list_pop td{
+			height: 75px;
+		}
+	</style>
+	
 	<link rel="stylesheet" href="/css/admin.css" type="text/css">
 	
 	<!-- CDN(Content Delivery Network) 호스트 사용 -->
@@ -34,7 +40,7 @@
 			 $( "td.ct_btn01:contains('검색')" ).on("click" , function() {
 				//Debug..
 				//alert(  $( "td.ct_btn01:contains('검색')" ).html() );
-				fncGetUserList(1);
+				fncGetList(1);
 			});
 			
 			
@@ -126,6 +132,87 @@
 							}
 					}); 
 			});	
+			 
+			let index=1;
+			
+			$(window).scroll(function(){
+					var scrollTop = $(this).scrollTop();
+					var windowHeight = $(this).height();
+					var documentHeight = $(document).height();
+					//console.log("scrollTop : "+scrollTop+" windowHeight : "+windowHeight+" documentHeight : "+documentHeight)
+				 	
+					if(scrollTop + windowHeight+100 >= documentHeight && ${resultPage.totalCount}>= (index*${resultPage.pageSize}-1)){
+						index++;
+						$.ajax({
+							url : "/user/json/userListScroll",
+							method : "POST",
+							data : JSON.stringify({
+								searchCondition : $("select[name='searchCondition']").val(),
+								searchKeyword : $("input[name='searchKeyword']").val(),
+								currentPage : index
+							}),
+							headers : {
+								"Accept" : "application/json",
+								"Content-Type" : "application/json"
+							},
+							success : function(JSONData , status){
+								
+								var userIndex = (JSONData.pageSize * (index-1))+1;
+								
+								for(var i=0; i<JSONData.list.length; i++){
+								
+									let user = JSONData.list[i];
+									
+									$("table:last").append(
+											'<tr class="ct_list_pop">'
+											+'<td align="center">'+(userIndex+i)+'</td>'
+											+'<td></td>'
+											+'<td align="left">'+user.userId+'</td>'
+											+'<td></td>'
+											+'<td align="left">'+user.userName+'</td>'
+											+'<td></td>'
+											+'<td align="left">'+(user.email == null ? "" : user.email)+'</td>'
+										+'</tr>'
+										+'<tr>'
+											+'<td id="'+user.userId+'" colspan="11" bgcolor="D6D7D6" height="1"></td>'
+										+'</tr>'
+									)
+								}
+								$(".ct_list_pop:nth-child(4n+6)" ).css("background-color" , "whitesmoke");
+								$( ".ct_list_pop td:nth-child(3)" ).css("color" , "red");
+								$( ".ct_list_pop td:nth-child(3)" ).on("click" , function() {
+									var userId = $(this).text().trim();
+									$.ajax( 
+											{
+												url : "/user/json/getUser/"+userId ,
+												method : "GET" ,
+												dataType : "json" ,
+												headers : {
+													"Accept" : "application/json",
+													"Content-Type" : "application/json"
+												},
+												success : function(JSONData , status) {
+													
+													var displayValue = "<h3>"
+																				+"아이디 : "+JSONData.userId+"<br/>"
+																				+"이  름 : "+JSONData.userName+"<br/>"
+																				+"이메일 : "+JSONData.email+"<br/>"
+																				+"ROLE : "+JSONData.role+"<br/>"
+																				+"등록일 : "+JSONData.regDateString+"<br/>"
+																				+"</h3>";
+													$("h3").remove();
+													$( "#"+userId+"" ).html(displayValue);
+												}
+										});
+									
+							});//end of nameClickEvent
+							}
+							
+						})//end of scrollAjax
+						
+					}
+			})//end of scroll
+			 
 		 });	
 	</script>		
 	
@@ -134,7 +221,7 @@
 <body bgcolor="#ffffff" text="#000000">
 
 
-<div style="width:98%; margin-left:10px;">
+<div height="50px" style="width:98%; margin-left:10px;">
 
 <form name="detailForm">
 
@@ -164,7 +251,7 @@
 				<option value="1"  ${ ! empty search.searchCondition && search.searchCondition==1 ? "selected" : "" }>회원명</option>
 			</select>
 			<input type="text" name="searchKeyword" 
-						value="${! empty search.searchKeyword ? search.searchKeyword : ""}"  
+						value="${! empty search.searchKeyword ? search.searchKeyword : ''}"  
 						class="ct_input_g" style="width:200px; height:20px" > 
 		</td>
 		<td align="right" width="70">
@@ -184,7 +271,7 @@
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top:10px;">
 	<tr>
 		<td colspan="11" >
-			전체  ${resultPage.totalCount } 건수, 현재 ${resultPage.currentPage}  페이지
+			전체  ${resultPage.totalCount} 건수, 현재 ${resultPage.currentPage}  페이지
 		</td>
 	</tr>
 	<tr>
@@ -206,7 +293,7 @@
 	<c:set var="i" value="0" />
 	<c:forEach var="user" items="${list}">
 		<c:set var="i" value="${ i+1 }" />
-		<tr class="ct_list_pop">
+		<tr class="ct_list_pop" style='table-layout:fixed'>
 			<td align="center">${ i }</td>
 			<td></td>
 			<td align="left">${user.userId}</td>
@@ -225,20 +312,6 @@
 
 	</c:forEach>
 </table>
-
-
-<!-- PageNavigation Start... -->
-<table width="100%" border="0" cellspacing="0" cellpadding="0"	style="margin-top:10px;">
-	<tr>
-		<td align="center">
-		   <input type="hidden" id="currentPage" name="currentPage" value=""/>
-	
-			<jsp:include page="../common/pageNavigator.jsp"/>	
-			
-    	</td>
-	</tr>
-</table>
-<!-- PageNavigation End... -->
 
 </form>
 </div>

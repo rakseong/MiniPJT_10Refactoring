@@ -142,5 +142,17 @@ public class UserRestController {
 		return list;
 	}
 	
+	@RequestMapping(value = "json/userListScroll", method = RequestMethod.POST)
+	public Map userListScroll(@RequestBody Search search) throws Exception{
+		search.setPageSize(pageSize);
+		
+		System.out.println("/user/json/prodListScroll : POST\n");
+		Map<String , Object> map = userService.getUserList(search);
+		map.put("pageSize", pageSize);
+		// Business logic ผ๖วเ
+		
+		return map;
+	}
+	
 	
 }

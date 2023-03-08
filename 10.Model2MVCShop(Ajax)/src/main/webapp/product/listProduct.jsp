@@ -8,6 +8,12 @@
 <head>
 <title>상품 목록조회</title>
 
+<style type="text/css">
+	.ct_list_pop td{
+		height: 75px;
+	}
+</style>
+
 <link rel="stylesheet" href="/css/admin.css" type="text/css">
 <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -29,6 +35,45 @@ function fncGetOrderList(currentPage,orderStandard){
 
 $(function(){
 	
+	let productIndex=1;
+	
+	$(window).scroll(function(){
+			var scrollTop = $(this).scrollTop();
+			var windowHeight = $(this).height();
+			var documentHeight = $(document).height();
+			//console.log("scrollTop : "+scrollTop+" windowHeight : "+windowHeight+" documentHeight : "+documentHeight)
+		 	
+			if(scrollTop + windowHeight == documentHeight && ${resultPage.totalCount}>= (productIndex*(${resultPage.pageSize}-1))){
+				productIndex++;
+				$.ajax({
+					url : "/prod/json/prodListScroll",
+					method : "POST",
+					data : JSON.stringify({
+						searchCondition : $("select[name='searchCondition']").val(),
+						searchKeyword : $("input[name='searchKeyword']").val(),
+						currentPage : productIndex
+					}),
+					headers : {
+						"Accept" : "application/json",
+						"Content-Type" : "application/json"
+					},
+					success : function(JSONData , status){
+						var prodIndex = (${resultPage.pageSize} * (productIndex-1))+1;
+						for(var i=0; i<JSONData.length; i++){
+							
+							let product = JSONData[i];
+							console.log(product.prodName);
+							$("table:last").append(	
+									
+							)//end of append
+						}//end of for
+					}//end of sucess
+					
+				})//end of scrollAjax
+				
+			}
+	})//end of scroll
+	
 	$("input[name=searchKeyword]").on('keydown',function(){
 		var condition = $("select[name='searchCondition']").val()
 		$.ajax( 
@@ -42,6 +87,7 @@ $(function(){
 					},
 					success : function(JSONData , status) {
 						var list = JSONData;
+						console.log(list)
 						$(".ct_input_g[name=searchKeyword]").autocomplete({
 							source:list
 						});
@@ -176,13 +222,8 @@ $(function(){
 		<td class="ct_line02"></td>
 		<td class="ct_list_b">현재상태</td>	
 	</tr>
-	
-	<tr>
-		<td colspan="11" bgcolor="808285" height="1"></td>
-	</tr>
-	
-	<c:set var="i" value="0"/>
-	<c:forEach var="product" items="${list}">
+		<c:set var="i" value="0"/>
+		<c:forEach var="product" items="${list}">
 		<c:set var="i" value="${ i+1 }" />
 		<tr class="ct_list_pop">
 			<td align="center">${i}</td>
@@ -242,6 +283,8 @@ $(function(){
 			<td colspan="11" bgcolor="D6D7D6" height="1"></td>
 		</tr>
 	</c:forEach>
+	
+	
 </table>
 
 <input type="hidden" id="menu" name="menu" value="${param.menu}"/>
